@@ -6,6 +6,10 @@ import sys
 import googlemaps
 import json
 
+from PyQt6.QtCore import QSize, Qt, QUrl
+from PyQt6.QtWidgets import QApplication, QMainWindow
+from PyQt6.QtWebEngineWidgets import QWebEngineView
+
 ## importowanie klucza z config.json
 with open('config.json') as f:
     config = json.load(f)
@@ -63,6 +67,21 @@ class Window(QWidget):
             #BUTTON_SEND
         button_send = QPushButton("Send", self)
         button_send.clicked.connect(self.retrieveText)
+
+        # Create a WebEngineView to display Google Maps
+        self.map_view = QWebEngineView()
+        self.setCentralWidget(self.map_view)
+
+        # Load Google Maps
+        self.load_map()
+
+    def load_map(self):
+        api_key = "YOUR_GOOGLE_MAPS_API_KEY"
+        # Replace YOUR_GOOGLE_MAPS_API_KEY with your actual API key
+        url = QUrl(f"https://www.google.com/maps/embed/v1/place?key={api_key}&q=Space+Needle,Seattle+WA")
+
+        # Load the map
+        self.map_view.load(url)
 
 
 
