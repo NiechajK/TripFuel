@@ -37,7 +37,7 @@ AFC_tir = 0.3
 def distance(start, finnish):
     return gmaps.distance_matrix(start,
                                     finnish,
-                                    mode = "walking")['rows'][0]['elements'][0]['distance']['text']
+                                    )['rows'][0]['elements'][0]['distance']['text']
 
 
 
