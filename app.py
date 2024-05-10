@@ -20,7 +20,7 @@ def remove_unit(text):
         if char.isdigit():
             result += char
         elif char ==',':
-            print('XD')
+            print("!!!")
         elif char == '.' and not dot_encountered:
             result += char
             dot_encountered = True
@@ -84,52 +84,57 @@ class MainWindow(QMainWindow):
         if self.location1_edit.text() and self.location2_edit.text():
             start = self.location1_edit.text()
             finish = self.location2_edit.text()
-
-            # Pobierz dane trasy z Google Directions API
-            response = gmaps.directions(start, finish, alternatives=True)
-
-            # Utwórz mapę folium
-            map_obj = folium.Map(
-                location=[response[0]['legs'][0]['start_location']['lat'], response[0]['legs'][0]['start_location']['lng']],
-               zoom_start=7)
-
-            # Kolory dla różnych tras
-            colors = ['blue', 'green', 'red', 'purple', 'orange', 'pink', 'black', 'gray']
-
-            # Dla każdej trasy w odpowiedzi
-            for i, route in enumerate(response):
+            try:
+                # Pobierz dane trasy z Google Directions API
+                response = gmaps.directions(start, finish, alternatives=True)
 
 
 
-                # Pobierz punkty polyline dla trasy
-                points = polyline.decode(route['overview_polyline']['points'])
+                # Utwórz mapę folium
+                map_obj = folium.Map(
+                    location=[response[0]['legs'][0]['start_location']['lat'], response[0]['legs'][0]['start_location']['lng']],
+                    zoom_start=7)
 
-                # Oblicz długość trasy
-                distance_text = route['legs'][0]['distance']['text']
-                fuel_consumed = "specify consumption first"
-                if self.fuel_consumption.text():
-                    fuel_consumed = float(remove_unit(self.fuel_consumption.text())) * float(remove_unit(distance_text)) / 100
+                # Kolory dla różnych tras
+                colors = ['blue', 'green', 'red', 'purple', 'orange', 'pink', 'black', 'gray']
 
-                # Dodaj linię na mapę z etykietą długości trasy
-                folium.PolyLine(locations=points, color=colors[i], tooltip=f"Route {i + 1} ({distance_text}) Fuel estimated: ({fuel_consumed}l)").add_to(
-                    map_obj)
-
-                # Oznacz punkt startowy
-                folium.Marker(
-                   location=[route['legs'][0]['start_location']['lat'], route['legs'][0]['start_location']['lng']],
-                   popup='Start', icon=folium.Icon(color='green')).add_to(map_obj)
-
-                # Oznacz punkt końcowy
-                folium.Marker(location=[route['legs'][0]['end_location']['lat'], route['legs'][0]['end_location']['lng']],
-                            popup='Finish', icon=folium.Icon(color='red')).add_to(map_obj)
+                # Dla każdej trasy w odpowiedzi
+                for i, route in enumerate(response):
 
 
 
-            # Zapisz mapę do pliku HTML
-            map_obj.save('map.html')
+                    # Pobierz punkty polyline dla trasy
+                    points = polyline.decode(route['overview_polyline']['points'])
 
-            # Otwórz plik HTML w domyślnej przeglądarce
-            webbrowser.open('map.html')
+                    # Oblicz długość trasy
+                    distance_text = route['legs'][0]['distance']['value']
+                    fuel_consumed = "specify consumption first"
+                    if self.fuel_consumption.text():
+                        fuel_consumed = float((self.fuel_consumption.text())) * float((distance_text)) / 100000
+
+                    # Dodaj linię na mapę z etykietą długości trasy
+                    folium.PolyLine(locations=points, color=colors[i], tooltip=f"Route {i + 1} ({distance_text}m) Fuel estimated: ({fuel_consumed}l)").add_to(
+                        map_obj)
+
+                    # Oznacz punkt startowy
+                    folium.Marker(
+                       location=[route['legs'][0]['start_location']['lat'], route['legs'][0]['start_location']['lng']],
+                       popup='Start', icon=folium.Icon(color='green')).add_to(map_obj)
+
+                    # Oznacz punkt końcowy
+                    folium.Marker(location=[route['legs'][0]['end_location']['lat'], route['legs'][0]['end_location']['lng']],
+                                popup='Finish', icon=folium.Icon(color='red')).add_to(map_obj)
+
+
+
+                # Zapisz mapę do pliku HTML
+                map_obj.save('map.html')
+
+                # Otwórz plik HTML w domyślnej przeglądarce
+                webbrowser.open('map.html')
+            except:
+                print("INVALID START/FINISH")
+
 
 
     def load_map(self):
@@ -171,8 +176,8 @@ class MainWindow(QMainWindow):
                 f"document.getElementById('map').src = 'https://www.google.com/maps/embed/v1/directions?key={api_key}&origin={location1}&destination={location2}'",
                 self.on_map_updated)
         if self.fuel_consumption.text():
-            fuel_consumed =  float(remove_unit(self.fuel_consumption.text()))*float(distance)/100000
-            print(float(remove_unit(self.fuel_consumption.text())))
+            fuel_consumed =  float((self.fuel_consumption.text()))*float(distance)/100000
+            print(float((self.fuel_consumption.text())))
             print(float(distance))
             self.consumption_label.setText(f"Consumption {fuel_consumed}l")
 
@@ -185,19 +190,23 @@ class MainWindow(QMainWindow):
     def distance(self, start, finish):
         # Pobieranie odległości z Google Maps Distance Matrix API
         response = gmaps.distance_matrix(start, finish)
-        print(response)
-        # Sprawdzenie czy API zwróciło poprawną odpowiedź
-        if 'rows' in response and len(response['rows']) > 0:
-            element = response['rows'][0]['elements'][0]
 
-            # Sprawdzenie czy odległość została znaleziona
-            if 'distance' in element:
-                distance_text = element['distance']['value']
-                return distance_text
-            else:
-                return "Distance not found"
+        if  response['rows'][0]['elements'][0]['status'] == "NOT_FOUND":
+            return 0
         else:
-            return "Error retrieving distance"
+            #print(json.dumps(response,indent=4))
+            # Sprawdzenie czy API zwróciło poprawną odpowiedź
+            if 'rows' in response and len(response['rows']) > 0:
+                element = response['rows'][0]['elements'][0]
+
+                # Sprawdzenie czy odległość została znaleziona
+                if 'distance' in element:
+                    distance_text = element['distance']['value']
+                    return distance_text
+                else:
+                    return "Distance not found"
+            else:
+                return "Error retrieving distance"
 
 
 def main():
