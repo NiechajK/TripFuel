@@ -1,7 +1,7 @@
 ## Zadania
 
 ### Instalacja dependencies
-`pip install polyline folium webbrowser googlemaps PyQt6` 
+`pip install googlemaps pyqt6 polyline folium` 
 
 ### Zadanie 1
 Napisz własny program z pomocą informacji ze slajdów. Wykorzystując `distance_matrix` podaj odległość między `Jodenbuurt, 1011 RL Amsterdam` a `S112 220, 1097 DN Amsterdam`. Wyślij screenshot terminala z wyprintowanym JSON.
